@@ -1,0 +1,59 @@
+name: Build and Release
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "versions.txt"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set environment variables
+        run: |
+          echo "RELEASE_TAG=build-$(date +'%Y%m%d')-$(git rev-parse --short HEAD)" >> $GITHUB_ENV
+          echo "LATEST_COMMIT_SHORT=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
+          echo "BUILD=true" >> $GITHUB_ENV
+
+      - name: Install build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libzimg-dev \
+            meson \
+            libxxhash-dev \
+            nasm \
+            libfftw3-dev \
+            llvm-16 \
+            gcc g++ \
+            make \
+            wget \
+            unzip
+
+      - name: Check versions file
+        run: cat versions.txt
+
+      - name: Run build script
+        run: bash build.sh
+
+      - name: Package build
+        run: tar -czvf build-artifacts.tar.gz out/
+
+      - name: Create/update release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ env.RELEASE_TAG }}
+          name: "Build ${{ env.LATEST_COMMIT_SHORT }}"
+          body: |
+            Automated build triggered by changes to versions.txt
+
+            [View changes](https://github.com/${{ github.repository }}/commit/${{ env.LATEST_COMMIT_SHORT }})
+          files: build-artifacts.tar.gz
+          token: ${{ secrets.GITHUB_TOKEN }}

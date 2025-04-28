@@ -1,0 +1,86 @@
+#!/bin/bash
+set -e
+
+# Create output directory
+out_dir=out
+rm -rf $out_dir
+mkdir -p $out_dir
+
+# Load versions from versions.txt
+declare -A versions
+while IFS='=' read -r key value; do
+  # Skip comments and empty lines
+  [[ $key == \#* || -z $key ]] && continue
+  versions["$key"]="$value"
+done <versions.txt
+
+echo "Building with versions:"
+for key in "${!versions[@]}"; do
+  echo "  $key: ${versions[$key]}"
+done
+
+build() {
+  local repo="$1"
+  local version="$2"
+  local name="$3"
+  local build_cmd="$4"
+
+  echo "--- Building $name (version: $version) ---"
+
+  mkdir -p build
+  cd build
+
+  if [ ! -d "$name" ]; then
+    echo "Cloning $name..."
+    git clone --depth 1 "$repo" "$name"
+    cd "$name"
+  else
+    echo "Updating $name..."
+    cd "$name"
+    git fetch
+  fi
+
+  # Checkout specific version if not "latest"
+  if [ "$version" != "latest" ]; then
+    echo "Checking out version: $version"
+    git checkout "$version"
+  else
+    echo "Using latest version"
+    git pull
+  fi
+
+  # Build the project
+  eval "$build_cmd"
+
+  # Copy built libraries directly to output directory
+  echo "Copying $name libraries to $out_dir"
+  find "build" -name "*.so" -exec cp {} "../../$out_dir/" \;
+
+  cd ../..
+}
+
+# Build bestsource
+if [ -n "${versions[bestsource]}" ]; then
+  build "https://github.com/vapoursynth/bestsource.git" \
+    "${versions[bestsource]}" \
+    "bestsource" \
+    "meson setup build && ninja -C build"
+fi
+
+# Build mvtools
+if [ -n "${versions[mvtools]}" ]; then
+  build "https://github.com/dubhater/vapoursynth-mvtools.git" \
+    "${versions[mvtools]}" \
+    "mvtools" \
+    "meson setup build && ninja -C build"
+fi
+
+# Build akarin
+if [ -n "${versions[akarin]}" ]; then
+  build "https://github.com/Jaded-Encoding-Thaumaturgy/akarin-vapoursynth-plugin.git" \
+    "${versions[akarin]}" \
+    "akarin" \
+    "meson build && ninja -C build"
+fi
+
+echo "Build complete. All libraries are in $out_dir directory"
