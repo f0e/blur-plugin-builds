@@ -49,15 +49,15 @@ build() {
   # Checkout specific version if not "latest"
   if [ "$version" != "latest" ]; then
     echo "Checking out version: $version"
-    git checkout "$version" || {
-      echo "Failed to checkout $version, fetching full history and retrying..."
-      git fetch --unshallow || git fetch --all
-      git checkout "$version"
-    }
+    git checkout "$version"
   else
     echo "Using latest version"
     git pull
   fi
+
+  # Initialize and update submodules
+  echo "Initializing submodules for $name"
+  git submodule update --init --recursive
 
   # Build the project
   eval "$build_cmd"
