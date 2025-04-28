@@ -43,9 +43,6 @@ jobs:
       - name: Run build script
         run: bash build.sh
 
-      - name: Package build
-        run: tar -czvf build-artifacts.tar.gz out/
-
       - name: Create/update release
         uses: softprops/action-gh-release@v2
         with:
@@ -55,5 +52,5 @@ jobs:
             Automated build triggered by changes to versions.txt
 
             [View changes](https://github.com/${{ github.repository }}/commit/${{ env.LATEST_COMMIT_SHORT }})
-          files: build-artifacts.tar.gz
+          files: out/*
           token: ${{ secrets.GITHUB_TOKEN }}
