@@ -32,7 +32,13 @@ build() {
 
   if [ ! -d "$name" ]; then
     echo "Cloning $name..."
-    git clone --depth 1 "$repo" "$name"
+    if [ "$version" != "latest" ]; then
+      # Clone with full history when specific version is needed
+      git clone "$repo" "$name"
+    else
+      # Use shallow clone for latest version
+      git clone --depth 1 "$repo" "$name"
+    fi
     cd "$name"
   else
     echo "Updating $name..."
@@ -43,7 +49,11 @@ build() {
   # Checkout specific version if not "latest"
   if [ "$version" != "latest" ]; then
     echo "Checking out version: $version"
-    git checkout "$version"
+    git checkout "$version" || {
+      echo "Failed to checkout $version, fetching full history and retrying..."
+      git fetch --unshallow || git fetch --all
+      git checkout "$version"
+    }
   else
     echo "Using latest version"
     git pull
