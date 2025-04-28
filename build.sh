@@ -1,6 +1,23 @@
 #!/bin/bash
 set -e
 
+echo "Installing FFmpeg (apt version is out of date)"
+
+FFMPEG_URL="https://github.com/BtbN/FFmpeg-Builds/releases/download/latest/ffmpeg-master-latest-linux64-gpl-shared.tar.xz"
+OUT_DIR="/tmp/ffmpeg-build"
+
+wget -qO /tmp/ffmpeg.tar.xz "$FFMPEG_URL"
+mkdir -p "$OUT_DIR"
+tar -xf /tmp/ffmpeg.tar.xz -C "$OUT_DIR"
+
+sudo cp -r "$OUT_DIR/ffmpeg-master-latest-linux64-gpl-shared/bin/"* /usr/local/bin/
+sudo cp -r "$OUT_DIR/ffmpeg-master-latest-linux64-gpl-shared/lib/"* /usr/local/lib/
+sudo cp -r "$OUT_DIR/ffmpeg-master-latest-linux64-gpl-shared/include/"* /usr/local/include/
+
+sudo ldconfig
+
+echo "FFmpeg installed successfully"
+
 # Create output directory
 out_dir=out
 rm -rf $out_dir
