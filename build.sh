@@ -1,23 +1,6 @@
 #!/bin/bash
 set -e
 
-echo "Installing FFmpeg (apt version is out of date)"
-
-FFMPEG_URL="https://github.com/BtbN/FFmpeg-Builds/releases/download/latest/ffmpeg-master-latest-linux64-gpl-shared.tar.xz"
-OUT_DIR="/tmp/ffmpeg-build"
-
-wget -qO /tmp/ffmpeg.tar.xz "$FFMPEG_URL"
-mkdir -p "$OUT_DIR"
-tar -xf /tmp/ffmpeg.tar.xz -C "$OUT_DIR"
-
-sudo cp -r "$OUT_DIR/ffmpeg-master-latest-linux64-gpl-shared/bin/"* /usr/local/bin/
-sudo cp -r "$OUT_DIR/ffmpeg-master-latest-linux64-gpl-shared/lib/"* /usr/local/lib/
-sudo cp -r "$OUT_DIR/ffmpeg-master-latest-linux64-gpl-shared/include/"* /usr/local/include/
-
-sudo ldconfig
-
-echo "FFmpeg installed successfully"
-
 # Create output directory
 out_dir=out
 rm -rf $out_dir
@@ -41,6 +24,7 @@ build() {
   local version="$2"
   local name="$3"
   local build_cmd="$4"
+  local is_dependency="${5:-false}" # Whether this is a dependency (not to be released)
 
   echo "--- Building $name (version: $version) ---"
 
@@ -79,12 +63,49 @@ build() {
   # Build the project
   eval "$build_cmd"
 
-  # Copy built libraries directly to output directory
-  echo "Copying $name libraries to $out_dir"
-  find "build" -name "*.so" -exec cp {} "../../$out_dir/" \;
+  if [[ "$is_dependency" != "true" ]]; then
+    # Copy built libraries directly to output directory
+    echo "Copying $name libraries to $out_dir"
+    find "build" -name "*.so" -exec cp {} "../../$out_dir/" \;
+  fi
 
   cd ../..
 }
+
+echo "Installing FFmpeg (apt version is out of date)"
+
+FFMPEG_URL="https://github.com/BtbN/FFmpeg-Builds/releases/download/latest/ffmpeg-master-latest-linux64-gpl-shared.tar.xz"
+OUT_DIR="/tmp/ffmpeg-build"
+
+wget -qO /tmp/ffmpeg.tar.xz "$FFMPEG_URL"
+mkdir -p "$OUT_DIR"
+tar -xf /tmp/ffmpeg.tar.xz -C "$OUT_DIR"
+
+sudo cp -r "$OUT_DIR/ffmpeg-master-latest-linux64-gpl-shared/bin/"* /usr/local/bin/
+sudo cp -r "$OUT_DIR/ffmpeg-master-latest-linux64-gpl-shared/lib/"* /usr/local/lib/
+sudo cp -r "$OUT_DIR/ffmpeg-master-latest-linux64-gpl-shared/include/"* /usr/local/include/
+
+sudo ldconfig
+
+echo "FFmpeg installed successfully"
+
+echo "Installing Vapoursynth"
+
+# Build VapourSynth as a dependency (not included in release)
+if [ -n "${versions[vapoursynth]}" ]; then
+  pip install cython
+
+  build "https://github.com/vapoursynth/vapoursynth.git" \
+    "${versions[vapoursynth]}" \
+    "vapoursynth" \
+    "
+    ./autogen.sh
+    ./configure
+    make
+    sudo make install
+    " \
+    "true"
+fi
 
 # Build bestsource
 if [ -n "${versions[bestsource]}" ]; then
@@ -110,4 +131,4 @@ if [ -n "${versions[akarin]}" ]; then
     "meson build && ninja -C build"
 fi
 
-echo "Build complete. All libraries are in $out_dir directory"
+echo "Build complete. All plugin libraries are in $out_dir directory"
