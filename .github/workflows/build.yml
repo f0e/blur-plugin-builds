@@ -35,7 +35,8 @@ jobs:
             gcc g++ \
             make \
             wget \
-            unzip
+            unzip\
+            libavcodec-dev libavformat-dev libavfilter-dev libavdevice-dev
 
       - name: Check versions file
         run: cat versions.txt
