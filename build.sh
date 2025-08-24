@@ -65,49 +65,41 @@ sudo ldconfig
 
 echo "FFmpeg installed successfully"
 
-echo "Installing Vapoursynth"
+# Build VapourSynth
+echo "Building & installing Vapoursynth"
 
-# Build VapourSynth as a dependency (not included in release)
-if [ -d "vapoursynth" ]; then
-  pip install cython
+pip install cython
 
-  build "vapoursynth" \
-    "vapoursynth" \
-    "
-    ./autogen.sh
-    ./configure
-    make
-    sudo make install
-    " \
-    "true"
-fi
+build "vapoursynth" \
+  "vapoursynth" \
+  "
+  ./autogen.sh
+  ./configure
+  make
+  sudo make install
+  " \
+  "true"
+
+echo "Building plugins"
 
 # Build bestsource
-if [ -d "bestsource" ]; then
-  build "bestsource" \
-    "bestsource" \
-    "meson setup build && ninja -C build"
-fi
+build "bestsource" \
+  "bestsource" \
+  "meson setup build && ninja -C build"
 
 # Build mvtools
-if [ -d "mvtools" ]; then
-  build "mvtools" \
-    "mvtools" \
-    "meson setup build && ninja -C build"
-fi
+build "mvtools" \
+  "mvtools" \
+  "meson setup build && ninja -C build"
 
 # Build akarin
-if [ -d "akarin" ]; then
-  build "akarin" \
-    "akarin" \
-    "meson build && ninja -C build"
-fi
+build "akarin" \
+  "akarin" \
+  "meson build && ninja -C build"
 
 # Build akarin arm
-if [ -d "akarin-arm" ]; then
-  build "akarin-arm" \
-    "akarin-arm" \
-    "meson build && ninja -C build"
-fi
+build "akarin-arm" \
+  "akarin-arm" \
+  "meson build && ninja -C build"
 
 echo "Build complete. All plugin libraries are in $out_dir directory"
