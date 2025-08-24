@@ -42,9 +42,6 @@ jobs:
             wget \
             unzip
 
-      - name: Check versions file
-        run: cat versions.txt
-
       - name: Run build script
         run: bash build.sh
 
