@@ -44,7 +44,14 @@ jobs:
       - name: Run build script
         run: bash build.sh
 
-      - name: Create/update release
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: plugins
+          path: out/*
+
+      - name: Create release
+        if: github.event_name == 'push' && contains(github.ref, 'refs/tags/')
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ env.RELEASE_TAG }}

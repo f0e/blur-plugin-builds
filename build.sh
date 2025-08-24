@@ -131,4 +131,12 @@ if [ -n "${versions[akarin]}" ]; then
     "meson build && ninja -C build"
 fi
 
+# Build akarin arm
+if [ -n "${versions[akarin-arm]}" ]; then
+  build "https://github.com/f0e/akarin-arm.git" \
+    "${versions[akarin]}" \
+    "akarin-arm" \
+    "meson build && ninja -C build"
+fi
+
 echo "Build complete. All plugin libraries are in $out_dir directory"
