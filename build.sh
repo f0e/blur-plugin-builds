@@ -42,7 +42,7 @@ build() {
   if [[ "$is_dependency" != "true" ]]; then
     # Copy built libraries directly to output directory
     echo "Copying $name libraries to $out_dir"
-    find "build" -name "*.so" -exec cp {} "../$out_dir/" \;
+    find "build" -name "*.so" -exec cp {} "../$out_dir/$name" \;
   fi
 
   cd ..
