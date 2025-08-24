@@ -42,7 +42,7 @@ build() {
   if [[ "$is_dependency" != "true" ]]; then
     # Copy built libraries directly to output directory
     echo "Copying $name libraries to $out_dir"
-    find "build" -name "*.so" -exec cp {} "../$out_dir/$name" \;
+    find "build" -name "*.so" -exec cp {} "../$out_dir" \;
   fi
 
   cd ..
@@ -83,11 +83,6 @@ echo "Building plugins"
 # Build akarin
 build "akarin" \
   "akarin" \
-  "meson build && ninja -C build"
-
-# Build akarin arm
-build "akarin-arm" \
-  "akarin-arm" \
   "meson build && ninja -C build"
 
 # Build bestsource

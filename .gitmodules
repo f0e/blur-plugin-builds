@@ -7,9 +7,6 @@
 [submodule "akarin"]
 	path = akarin
 	url = https://github.com/Jaded-Encoding-Thaumaturgy/akarin-vapoursynth-plugin.git
-[submodule "akarin-arm"]
-	path = akarin-arm
-	url = https://github.com/f0e/akarin-arm.git
 [submodule "vapoursynth"]
 	path = vapoursynth
 	url = https://github.com/vapoursynth/vapoursynth.git
