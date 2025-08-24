@@ -1,0 +1,12 @@
+[submodule "bestsource"]
+	path = bestsource
+	url = https://github.com/vapoursynth/bestsource.git
+[submodule "mvtools"]
+	path = mvtools
+	url = https://github.com/dubhater/vapoursynth-mvtools.git
+[submodule "akarin"]
+	path = akarin
+	url = https://github.com/Jaded-Encoding-Thaumaturgy/akarin-vapoursynth-plugin.git
+[submodule "akarin-arm"]
+	path = akarin-arm
+	url = https://github.com/f0e/akarin-arm.git

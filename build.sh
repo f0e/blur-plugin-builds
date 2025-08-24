@@ -6,58 +6,34 @@ out_dir=out
 rm -rf $out_dir
 mkdir -p $out_dir
 
-# Load versions from versions.txt
-declare -A versions
-while IFS='=' read -r key value; do
-  # Skip comments and empty lines
-  [[ $key == \#* || -z $key ]] && continue
-  versions["$key"]="$value"
-done <versions.txt
-
-echo "Building with versions:"
-for key in "${!versions[@]}"; do
-  echo "  $key: ${versions[$key]}"
+# Get submodule information
+echo "Checking submodules:"
+git submodule status --recursive | while read line; do
+  echo "  $line"
 done
 
+# Initialize and update all submodules
+echo "Initializing and updating submodules..."
+git submodule update --init --recursive
+
 build() {
-  local repo="$1"
-  local version="$2"
-  local name="$3"
-  local build_cmd="$4"
-  local is_dependency="${5:-false}" # Whether this is a dependency (not to be released)
+  local submodule_path="$1"
+  local name="$2"
+  local build_cmd="$3"
+  local is_dependency="${4:-false}" # Whether this is a dependency (not to be released)
 
-  echo "--- Building $name (version: $version) ---"
-
-  mkdir -p build
-  cd build
-
-  if [ ! -d "$name" ]; then
-    echo "Cloning $name..."
-    if [ "$version" != "latest" ]; then
-      # Clone with full history when specific version is needed
-      git clone "$repo" "$name"
-    else
-      # Use shallow clone for latest version
-      git clone --depth 1 "$repo" "$name"
-    fi
-    cd "$name"
-  else
-    echo "Updating $name..."
-    cd "$name"
-    git fetch
+  if [ ! -d "$submodule_path" ]; then
+    echo "Error: Submodule $submodule_path not found. Make sure it's properly added and initialized."
+    return 1
   fi
 
-  # Checkout specific version if not "latest"
-  if [ "$version" != "latest" ]; then
-    echo "Checking out version: $version"
-    git checkout "$version"
-  else
-    echo "Using latest version"
-    git pull
-  fi
+  local commit_hash=$(git -C "$submodule_path" rev-parse HEAD)
+  echo "--- Building $name (commit: ${commit_hash:0:8}) ---"
 
-  # Initialize and update submodules
-  echo "Initializing submodules for $name"
+  cd "$submodule_path"
+
+  # Initialize and update any nested submodules within this submodule
+  echo "Initializing nested submodules for $name"
   git submodule update --init --recursive
 
   # Build the project
@@ -66,10 +42,10 @@ build() {
   if [[ "$is_dependency" != "true" ]]; then
     # Copy built libraries directly to output directory
     echo "Copying $name libraries to $out_dir"
-    find "build" -name "*.so" -exec cp {} "../../$out_dir/" \;
+    find "build" -name "*.so" -exec cp {} "../$out_dir/" \;
   fi
 
-  cd ../..
+  cd ..
 }
 
 echo "Installing FFmpeg (apt version is out of date)"
@@ -92,11 +68,10 @@ echo "FFmpeg installed successfully"
 echo "Installing Vapoursynth"
 
 # Build VapourSynth as a dependency (not included in release)
-if [ -n "${versions[vapoursynth]}" ]; then
+if [ -d "vapoursynth" ]; then
   pip install cython
 
-  build "https://github.com/vapoursynth/vapoursynth.git" \
-    "${versions[vapoursynth]}" \
+  build "vapoursynth" \
     "vapoursynth" \
     "
     ./autogen.sh
@@ -108,33 +83,29 @@ if [ -n "${versions[vapoursynth]}" ]; then
 fi
 
 # Build bestsource
-if [ -n "${versions[bestsource]}" ]; then
-  build "https://github.com/vapoursynth/bestsource.git" \
-    "${versions[bestsource]}" \
+if [ -d "bestsource" ]; then
+  build "bestsource" \
     "bestsource" \
     "meson setup build && ninja -C build"
 fi
 
 # Build mvtools
-if [ -n "${versions[mvtools]}" ]; then
-  build "https://github.com/dubhater/vapoursynth-mvtools.git" \
-    "${versions[mvtools]}" \
+if [ -d "mvtools" ]; then
+  build "mvtools" \
     "mvtools" \
     "meson setup build && ninja -C build"
 fi
 
 # Build akarin
-if [ -n "${versions[akarin]}" ]; then
-  build "https://github.com/Jaded-Encoding-Thaumaturgy/akarin-vapoursynth-plugin.git" \
-    "${versions[akarin]}" \
+if [ -d "akarin" ]; then
+  build "akarin" \
     "akarin" \
     "meson build && ninja -C build"
 fi
 
 # Build akarin arm
-if [ -n "${versions[akarin-arm]}" ]; then
-  build "https://github.com/f0e/akarin-arm.git" \
-    "${versions[akarin]}" \
+if [ -d "akarin-arm" ]; then
+  build "akarin-arm" \
     "akarin-arm" \
     "meson build && ninja -C build"
 fi
