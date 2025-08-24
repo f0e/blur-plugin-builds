@@ -72,25 +72,13 @@ pip install cython
 
 build "vapoursynth" \
   "vapoursynth" \
-  "
-  ./autogen.sh
+  "./autogen.sh
   ./configure
   make
-  sudo make install
-  " \
+  sudo make install" \
   "true"
 
 echo "Building plugins"
-
-# Build bestsource
-build "bestsource" \
-  "bestsource" \
-  "meson setup build && ninja -C build"
-
-# Build mvtools
-build "mvtools" \
-  "mvtools" \
-  "meson setup build && ninja -C build"
 
 # Build akarin
 build "akarin" \
@@ -101,5 +89,15 @@ build "akarin" \
 build "akarin-arm" \
   "akarin-arm" \
   "meson build && ninja -C build"
+
+# Build bestsource
+build "bestsource" \
+  "bestsource" \
+  "meson setup build && ninja -C build"
+
+# Build mvtools
+build "mvtools" \
+  "mvtools" \
+  "meson setup build && ninja -C build"
 
 echo "Build complete. All plugin libraries are in $out_dir directory"
