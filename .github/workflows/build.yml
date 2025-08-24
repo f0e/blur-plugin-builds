@@ -3,8 +3,6 @@ name: Build and Release
 on:
   push:
     branches: [main]
-    paths:
-      - "versions.txt"
   workflow_dispatch:
 
 permissions:
@@ -15,6 +13,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Initialize submodules
+        run: |
+          git submodule update --init --recursive
 
       - name: Set environment variables
         run: |
@@ -51,13 +55,12 @@ jobs:
           path: out/*
 
       - name: Create release
-        if: github.event_name == 'push' && contains(github.ref, 'refs/tags/')
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ env.RELEASE_TAG }}
           name: "Build ${{ env.LATEST_COMMIT_SHORT }}"
           body: |
-            Automated build triggered by changes to versions.txt
+            Automated build triggered by changes to repository
 
             [View changes](https://github.com/${{ github.repository }}/commit/${{ env.LATEST_COMMIT_SHORT }})
           files: out/*
